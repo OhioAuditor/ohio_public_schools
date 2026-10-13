@@ -48,8 +48,8 @@ EXPENSE_DETAIL_DEST_PREFIX = os.getenv(
 # table name.
 # ------------------------------------------------------------
 NON_PAYROLL_DEST_PREFIX = os.getenv(
-    "CINCINNAT_PUBLIC_NON_PAYROLL_EXPENSES_DEST_PREFIX",
-    "data_from_clients/cincinnat_public_non_payroll_expenses/",
+    "CINCINNATI_PUBLIC_NON_PAYROLL_EXPENSES_DEST_PREFIX",
+    "data_from_clients/cincinnati_public_non_payroll_expenses/",
 ).strip("/")
 # ============================================================
 # Report 1 - Cincinnati Public Expense Detail
@@ -72,7 +72,7 @@ NON_PAYROLL_FILENAME = (
 NON_PAYROLL_SHEET_NAME = "Data"
 NON_PAYROLL_FISCAL_YEAR = "2025"
 NON_PAYROLL_REPORT_TYPE = (
-    "cincinnat_public_non_payroll_expenses"
+    "cincinnati_public_non_payroll_expenses"
 )
 # ============================================================
 # Expense Detail Columns
@@ -415,12 +415,12 @@ def validate_source_path(key):
 PAYROLL_FILENAME_PATTERN = re.compile(
     r"^Payroll Trans FY(?P<year>\d{2}|\d{4}) Q[1-4]\.xlsx$", re.IGNORECASE
 )
-PAYROLL_TABLE_NAME = "cincinnat_public_payroll_expenses"
+PAYROLL_TABLE_NAME = "cincinnati_public_payroll_expenses"
 PAYROLL_DEST_PREFIX = os.getenv(
-    "CINCINNAT_PUBLIC_PAYROLL_EXPENSES_DEST_PREFIX",
-    "data_from_clients/cincinnat_public_payroll_expenses/",
+    "CINCINNATI_PUBLIC_PAYROLL_EXPENSES_DEST_PREFIX",
+    "data_from_clients/cincinnati_public_payroll_expenses/",
 ).strip("/")
-PAYROLL_BATCH_ROWS = int(os.getenv("PAYROLL_BATCH_ROWS", "25000"))
+PAYROLL_BATCH_ROWS = int(os.getenv("PAYROLL_BATCH_ROWS", "5000"))
 PAYROLL_SOURCE_HEADERS = [
     "EEID", "EmployeeName", "CheckDt", "PayPeriod", "DebitAmt", "CreditAmt",
     "CDH", "CDHName", "FundCd", "FunctionCd", "ObjectCd", "ObjectCdDesc",
@@ -1415,8 +1415,14 @@ def match_import_headers(headers, definitions):
         if table == NON_PAYROLL_REPORT_TYPE:
             aliases.update(NON_PAYROLL_COLUMN_ALIASES)
         mapped = [aliases.get(v, v) for v in normalized]
-        data = [v for v in mapped if v != "fiscal_year"]
-        if len(data) == len(target) and set(data) == set(target) and len(mapped) == len(set(mapped)):
+        if table == NON_PAYROLL_REPORT_TYPE:
+            # Ignore explanatory NOTE columns, retaining their positions so
+            # a note inserted between data fields cannot shift row values.
+            mapped = [None if v == "note" or v.startswith("note_") else v
+                      for v in mapped]
+        active = [v for v in mapped if v is not None]
+        data = [v for v in active if v != "fiscal_year"]
+        if len(data) == len(target) and set(data) == set(target) and len(active) == len(set(active)):
             return (table, prefix, target, schema), mapped
     return None
 
@@ -1425,7 +1431,7 @@ def flexible_record(values, columns, definition, sheet_name, row_number, filenam
     from datetime import date, datetime, time
     from openpyxl.utils.datetime import from_excel
     table, prefix, target, schema = definition
-    row = dict(zip(columns, values))
+    row = {col: value for col, value in zip(columns, values) if col is not None}
     if table == CASH_FUND_BAL_TABLE_NAME and row.get("fund") in (None, "") and row.get("fund_description") in (None, ""):
         return None  # Separate grand total, not a fund record.
     result = {}
@@ -1730,7 +1736,7 @@ def legacy_convert_s3_object(
             NON_PAYROLL_REPORT_TYPE
         )
         table_name = (
-            "cincinnat_public_non_payroll_expenses"
+            "cincinnati_public_non_payroll_expenses"
         )
     elif report_type == "revenue_ledger":
         df = convert_revenue_ledger_excel(content)
@@ -1826,88 +1832,127 @@ def legacy_convert_s3_object(
 def convert_s3_object(bucket, key, s3=None):
     return convert_flexible_s3_object(bucket, key, s3)
 
-def lambda_handler(
-    event,
-    context,
-):
-    logger.info(
-        "Received event: %s",
-        json.dumps(event),
-    )
+# Direct continuation via asynchronous Lambda invocation; no SQS.
+# One chunk is uploaded before another invocation is requested.
+PART_ROWS = int(os.getenv("IMPORT_PART_ROWS", "50000"))
+MIN_REMAINING_MS = int(os.getenv("IMPORT_MIN_REMAINING_MS", "180000"))
+
+
+def process_partitioned_workbook(bucket, key, context, cursor=None, s3=None):
+    """Convert one bounded chunk, upload it, then resume with direct Lambda invocation.
+
+    Cursor is a worksheet index and absolute Excel row number. No transaction
+    deduplication occurs. An identical retry overwrites the same deterministic part.
+    """
+    import hashlib
+    import tempfile
+    from pathlib import Path
+    from openpyxl import load_workbook
+
+    validate_source_path(key)
+    if bucket != RAW_BUCKET:
+        raise ValueError(f"Unexpected source bucket: {bucket}")
+    if PART_ROWS < 1:
+        raise ValueError("IMPORT_PART_ROWS must be positive")
+    s3 = s3 or boto3.client("s3", region_name=AWS_REGION)
+    head = s3.head_object(Bucket=bucket, Key=key)
+    version = head.get("VersionId") or head.get("ETag", "").strip('"')
+    source_hash = hashlib.sha256((key + "|" + version).encode()).hexdigest()[:20]
+    filename = PurePosixPath(key).name
+    sheet_index = int((cursor or {}).get("sheet_index", 0))
+    start_row = int((cursor or {}).get("start_row", 1))
+    if cursor and cursor.get("version") != version:
+        raise ValueError("Source workbook changed during import; restart from S3 event")
+
+    with tempfile.TemporaryDirectory(prefix="cincinnati-import-") as directory:
+        source_path = str(Path(directory) / "source.xlsx")
+        s3.download_file(bucket, key, source_path)
+        wb = load_workbook(source_path, read_only=True, data_only=True)
+        try:
+            definitions = import_definitions()
+            while sheet_index < len(wb.worksheets):
+                sheet = wb.worksheets[sheet_index]
+                iterator = enumerate(sheet.iter_rows(values_only=True), start=1)
+                matched = None
+                for row_num, headers in iterator:
+                    matched = match_import_headers(headers, definitions)
+                    if matched or row_num >= 25:
+                        break
+                if not matched:
+                    logger.info("Skipping unsupported worksheet %s", sheet.title)
+                    sheet_index += 1
+                    start_row = 1
+                    continue
+                definition, columns = matched
+                table, prefix, _, schema = definition
+                first_data_row = row_num + 1
+                effective_start = max(first_data_row, start_row)
+                # Stable key per source, worksheet, and row interval. Parts from
+                # different source files do not collide in one Athena table.
+                records = []
+                last_row = effective_start - 1
+                for row_number, values in iterator:
+                    if row_number < effective_start:
+                        continue
+                    last_row = row_number
+                    if all(v is None or v == "" for v in values):
+                        continue
+                    if any(v is not None and v != "" for v in values[len(columns):]):
+                        raise ValueError(f"Extra data in {sheet.title} row {row_number}")
+                    record = flexible_record(values, columns, definition, sheet.title, row_number, filename)
+                    if record is not None:
+                        records.append(record)
+                    if len(records) >= PART_ROWS:
+                        break
+                    if context and context.get_remaining_time_in_millis() < MIN_REMAINING_MS:
+                        break
+                if records:
+                    # Use stable part names; retries overwrite the same part.
+                    dest_key = (f"{prefix}/{source_hash}/"
+                                f"sheet_{sheet_index:03d}_rows_{effective_start:08d}_{last_row:08d}.parquet")
+                    local_out = str(Path(directory) / "part.parquet")
+                    pq.write_table(pa.Table.from_pylist(records, schema=schema), local_out, compression="snappy")
+                    s3.upload_file(local_out, DEST_BUCKET, dest_key)
+                    logger.info("Uploaded %s rows from %s to s3://%s/%s", len(records), sheet.title, DEST_BUCKET, dest_key)
+                # If no records remain, advance worksheet. If we hit a chunk
+                # limit, continue at the next Excel row (including blank rows).
+                if len(records) >= PART_ROWS or (context and context.get_remaining_time_in_millis() < MIN_REMAINING_MS):
+                    next_cursor = {"sheet_index": sheet_index, "start_row": last_row + 1, "version": version}
+                else:
+                    next_cursor = {"sheet_index": sheet_index + 1, "start_row": 1, "version": version}
+                if next_cursor["sheet_index"] >= len(wb.worksheets):
+                    logger.info("Completed import of s3://%s/%s", bucket, key)
+                    return {"status": "complete", "last_destination": dest_key if records else None}
+                # Invoke after successful upload, not before.
+                fn = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+                if not fn:
+                    raise ValueError("AWS_LAMBDA_FUNCTION_NAME is required for continuation")
+                client = boto3.client("lambda", region_name=AWS_REGION)
+                response = client.invoke(FunctionName=fn, InvocationType="Event",
+                    Payload=json.dumps({"continuation": {"bucket": bucket, "key": key, "cursor": next_cursor}}).encode())
+                if response["StatusCode"] != 202:
+                    raise RuntimeError(f"Continuation invoke failed: {response}")
+                logger.info("Queued direct Lambda continuation: %s", next_cursor)
+                return {"status": "continuing", "cursor": next_cursor}
+            logger.info("Completed import of s3://%s/%s", bucket, key)
+            return {"status": "complete"}
+        finally:
+            wb.close()
+
+
+def lambda_handler(event, context):
+    """S3 upload or direct continuation. No SQS needed."""
+    if "continuation" in event:
+        job = event["continuation"]
+        return process_partitioned_workbook(job["bucket"], job["key"], context, job["cursor"])
     results = []
-    records = event.get(
-        "Records",
-        [],
-    )
-    # --------------------------------------------------------
-    # No records
-    # --------------------------------------------------------
-    if not records:
-        logger.warning(
-            "Event contained no S3 records."
-        )
-        return {
-            "statusCode": 200,
-            "body": json.dumps([]),
-        }
-    # --------------------------------------------------------
-    # Process each S3 record
-    # --------------------------------------------------------
-    for record in records:
-        # ----------------------------------------------------
-        # Direct S3 events only
-        # ----------------------------------------------------
-        if (
-            record.get("eventSource")
-            != "aws:s3"
-        ):
-            logger.warning(
-                "Skipping non-S3 event record."
-            )
+    for record in event.get("Records", []):
+        if record.get("eventSource") != "aws:s3" or "s3" not in record:
             continue
-        if "s3" not in record:
-            logger.warning(
-                "Skipping record without S3 information."
-            )
-            continue
-        # ----------------------------------------------------
-        # Bucket
-        # ----------------------------------------------------
-        bucket = (
-            record["s3"]
-            ["bucket"]
-            ["name"]
-        )
-        # ----------------------------------------------------
-        # Object key
-        # ----------------------------------------------------
-        key = unquote_plus(
-            record["s3"]
-            ["object"]
-            ["key"]
-        )
-        logger.info(
-            "S3 Object Created: s3://%s/%s",
-            bucket,
-            key,
-        )
-        # ----------------------------------------------------
-        # Process
-        # ----------------------------------------------------
-        result = convert_s3_object(
-            bucket=bucket,
-            key=key,
-        )
-        if result:
-            results.append(
-                result
-            )
-    # --------------------------------------------------------
-    # Response
-    # --------------------------------------------------------
-    return {
-        "statusCode": 200,
-        "body": json.dumps(
-            results
-        ),
-    }
+        bucket = record["s3"]["bucket"]["name"]
+        key = unquote_plus(record["s3"]["object"]["key"])
+        if key.lower().endswith(".xlsx") and not PurePosixPath(key).name.startswith("~$"):
+            results.append(process_partitioned_workbook(bucket, key, context))
+        else:
+            results.append(convert_flexible_s3_object(bucket, key))
+    return {"statusCode": 200, "body": json.dumps(results, default=str)}
