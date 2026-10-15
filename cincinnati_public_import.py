@@ -22,6 +22,12 @@ AWS_REGION = os.getenv(
     "AWS_REGION",
     "us-east-2",
 )
+# ============================================================
+# Destination Prefixes
+# ============================================================
+# ------------------------------------------------------------
+# Cincinnati Public Expense Detail
+# ------------------------------------------------------------
 RAW_BUCKET = os.getenv(
     "RAW_BUCKET",
     "schools-raw",
@@ -30,12 +36,6 @@ DEST_BUCKET = os.getenv(
     "DEST_BUCKET",
     "schools-transformed",
 ).strip()
-# ============================================================
-# Destination Prefixes
-# ============================================================
-# ------------------------------------------------------------
-# Cincinnati Public Expense Detail
-# ------------------------------------------------------------
 EXPENSE_DETAIL_DEST_PREFIX = os.getenv(
     "CINCINNATI_PUBLIC_EXPENSE_DETAIL_DEST_PREFIX",
     "data_from_clients/cincinnati_public_expense_detail/",
@@ -54,14 +54,10 @@ NON_PAYROLL_DEST_PREFIX = os.getenv(
 # ============================================================
 # Report 1 - Cincinnati Public Expense Detail
 # ============================================================
-EXPENSE_DETAIL_FILENAME = (
-    "1. Ohio Checkbook Q1 FY25 - OK.xlsx"
-)
+EXPENSE_DETAIL_FILENAME = "1. Ohio Checkbook Q1 FY25 - OK.xlsx"
 EXPENSE_DETAIL_SHEET_NAME = "Q1-FY25"
 EXPENSE_DETAIL_FISCAL_YEAR = "2025"
-EXPENSE_DETAIL_REPORT_TYPE = (
-    "cincinnati_public_expense_detail"
-)
+EXPENSE_DETAIL_REPORT_TYPE = "cincinnati_public_expense_detail"
 # ============================================================
 # Report 2 - Cincinnati Public Non-Payroll Expenses
 # ============================================================
@@ -71,9 +67,7 @@ NON_PAYROLL_FILENAME = (
 )
 NON_PAYROLL_SHEET_NAME = "Data"
 NON_PAYROLL_FISCAL_YEAR = "2025"
-NON_PAYROLL_REPORT_TYPE = (
-    "cincinnati_public_non_payroll_expenses"
-)
+NON_PAYROLL_REPORT_TYPE = "cincinnati_public_non_payroll_expenses"
 # ============================================================
 # Expense Detail Columns
 # ============================================================
@@ -89,10 +83,7 @@ EXPENSE_DETAIL_SOURCE_COLUMNS = [
     "usas_object",
     "usas_object_description",
 ]
-EXPENSE_DETAIL_FINAL_COLUMNS = (
-    EXPENSE_DETAIL_SOURCE_COLUMNS
-    + ["fiscal_year"]
-)
+EXPENSE_DETAIL_FINAL_COLUMNS = EXPENSE_DETAIL_SOURCE_COLUMNS + ["fiscal_year"]
 # ============================================================
 # Non-Payroll Columns
 # ============================================================
@@ -111,10 +102,7 @@ NON_PAYROLL_SOURCE_COLUMNS = [
     "check_amount",
     "oh_check_id",
 ]
-NON_PAYROLL_FINAL_COLUMNS = (
-    NON_PAYROLL_SOURCE_COLUMNS
-    + ["fiscal_year"]
-)
+NON_PAYROLL_FINAL_COLUMNS = NON_PAYROLL_SOURCE_COLUMNS + ["fiscal_year"]
 # ============================================================
 # Normalize Column Names
 # ============================================================
@@ -126,185 +114,67 @@ def normalize_column_name(name):
     interpreted by the Cincinnati workbooks.
     """
     s = str(name).strip()
-    # Split lower/digit followed by uppercase.
-    s = re.sub(
-        r"([a-z0-9])([A-Z])",
-        r"\1_\2",
-        s,
-    )
-    # Split acronym followed by normal capitalized word.
-    s = re.sub(
-        r"([A-Z]+)([A-Z][a-z])",
-        r"\1_\2",
-        s,
-    )
+    s = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", s)
+    s = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", s)
     s = s.lower()
-    # Replace punctuation/spaces with underscore.
-    s = re.sub(
-        r"[^a-z0-9]+",
-        "_",
-        s,
-    )
-    # Collapse multiple underscores.
-    s = re.sub(
-        r"_+",
-        "_",
-        s,
-    )
+    s = re.sub(r"[^a-z0-9]+", "_", s)
+    s = re.sub(r"_+", "_", s)
     return s.strip("_")
 # ============================================================
 # Expense Detail Column Aliases
 # ============================================================
 EXPENSE_DETAIL_COLUMN_ALIASES = {
-    "transaction_date":
-        "transaction_date",
-    "transactiondate":
-        "transaction_date",
-    "vendor_name":
-        "vendor_name",
-    "vendorname":
-        "vendor_name",
-    "amount":
-        "amount",
-    "check_number":
-        "check_number",
-    "checknumber":
-        "check_number",
-    "usas_fund":
-        "usas_fund",
-    "usasfund":
-        "usas_fund",
-    "usas_fund_description":
-        "usas_fund_description",
-    "usasfunddescription":
-        "usas_fund_description",
-    "usas_function":
-        "usas_function",
-    "usasfunction":
-        "usas_function",
-    "usas_func_description":
-        "usas_func_description",
-    "usasfuncdescription":
-        "usas_func_description",
-    "usas_object":
-        "usas_object",
-    "usasobject":
-        "usas_object",
-    "usas_object_description":
-        "usas_object_description",
-    "usasobjectdescription":
-        "usas_object_description",
+    "transaction_date": "transaction_date",
+    "transactiondate": "transaction_date",
+    "vendor_name": "vendor_name",
+    "vendorname": "vendor_name",
+    "amount": "amount",
+    "check_number": "check_number",
+    "checknumber": "check_number",
+    "usas_fund": "usas_fund",
+    "usasfund": "usas_fund",
+    "usas_fund_description": "usas_fund_description",
+    "usasfunddescription": "usas_fund_description",
+    "usas_function": "usas_function",
+    "usasfunction": "usas_function",
+    "usas_func_description": "usas_func_description",
+    "usasfuncdescription": "usas_func_description",
+    "usas_object": "usas_object",
+    "usasobject": "usas_object",
+    "usas_object_description": "usas_object_description",
+    "usasobjectdescription": "usas_object_description",
 }
 # ============================================================
 # Non-Payroll Column Aliases
-#
-# Includes the exact normalized column names shown in the
-# Lambda error:
-#
-#     invoiceline_amount
-#     pon_umber
-#
 # ============================================================
 NON_PAYROLL_COLUMN_ALIASES = {
-    # --------------------------------------------------------
-    # PE ID
-    # --------------------------------------------------------
-    "oh_pe_id":
-        "oh_pe_id",
-    "ohpeid":
-        "oh_pe_id",
-    # --------------------------------------------------------
-    # PE Name
-    # --------------------------------------------------------
-    "oh_pe_name":
-        "oh_pe_name",
-    "ohpename":
-        "oh_pe_name",
-    # --------------------------------------------------------
-    # Invoice Number
-    # --------------------------------------------------------
-    "invoice_number":
-        "invoice_number",
-    "invoicenumber":
-        "invoice_number",
-    # --------------------------------------------------------
-    # Invoice Line Amount
-    #
-    # Actual normalized workbook value:
-    # invoiceline_amount
-    # --------------------------------------------------------
-    "invoice_line_amount":
-        "invoice_line_amount",
-    "invoiceline_amount":
-        "invoice_line_amount",
-    "invoicelineamount":
-        "invoice_line_amount",
-    # --------------------------------------------------------
-    # PO Number
-    #
-    # Actual normalized workbook value:
-    # pon_umber
-    # --------------------------------------------------------
-    "po_number":
-        "po_number",
-    "pon_umber":
-        "po_number",
-    "ponumber":
-        "po_number",
-    # --------------------------------------------------------
-    # Pay Type
-    # --------------------------------------------------------
-    "pay_type":
-        "pay_type",
-    "paytype":
-        "pay_type",
-    # --------------------------------------------------------
-    # Check Number
-    # --------------------------------------------------------
-    "oh_check_no":
-        "oh_check_no",
-    "ohcheckno":
-        "oh_check_no",
-    # --------------------------------------------------------
-    # Check Date
-    # --------------------------------------------------------
-    "oh_ck_dt":
-        "oh_ck_dt",
-    "ohckdt":
-        "oh_ck_dt",
-    # --------------------------------------------------------
-    # Key FQA
-    # --------------------------------------------------------
-    "key_fqa":
-        "key_fqa",
-    "keyfqa":
-        "key_fqa",
-    # --------------------------------------------------------
-    # GL Object
-    # --------------------------------------------------------
-    "oh_gl_obj":
-        "oh_gl_obj",
-    "ohglobj":
-        "oh_gl_obj",
-    # --------------------------------------------------------
-    # FQA
-    # --------------------------------------------------------
-    "fqa":
-        "fqa",
-    # --------------------------------------------------------
-    # Check Amount
-    # --------------------------------------------------------
-    "check_amount":
-        "check_amount",
-    "checkamount":
-        "check_amount",
-    # --------------------------------------------------------
-    # Check ID
-    # --------------------------------------------------------
-    "oh_check_id":
-        "oh_check_id",
-    "ohcheckid":
-        "oh_check_id",
+    "oh_pe_id": "oh_pe_id",
+    "ohpeid": "oh_pe_id",
+    "oh_pe_name": "oh_pe_name",
+    "ohpename": "oh_pe_name",
+    "invoice_number": "invoice_number",
+    "invoicenumber": "invoice_number",
+    "invoice_line_amount": "invoice_line_amount",
+    "invoiceline_amount": "invoice_line_amount",
+    "invoicelineamount": "invoice_line_amount",
+    "po_number": "po_number",
+    "pon_umber": "po_number",
+    "ponumber": "po_number",
+    "pay_type": "pay_type",
+    "paytype": "pay_type",
+    "oh_check_no": "oh_check_no",
+    "ohcheckno": "oh_check_no",
+    "oh_ck_dt": "oh_ck_dt",
+    "ohckdt": "oh_ck_dt",
+    "key_fqa": "key_fqa",
+    "keyfqa": "key_fqa",
+    "oh_gl_obj": "oh_gl_obj",
+    "ohglobj": "oh_gl_obj",
+    "fqa": "fqa",
+    "check_amount": "check_amount",
+    "checkamount": "check_amount",
+    "oh_check_id": "oh_check_id",
+    "ohcheckid": "oh_check_id",
 }
 # ============================================================
 # Currency Conversion
@@ -330,47 +200,18 @@ def coerce_currency_decimal(value):
     cleaned = str(value).strip()
     if not cleaned:
         return None
-    # Accounting negative.
-    if (
-        cleaned.startswith("(")
-        and cleaned.endswith(")")
-    ):
-        cleaned = (
-            "-"
-            + cleaned[1:-1]
-        )
-    # Remove currency formatting.
-    cleaned = re.sub(
-        r"[$,\s]",
-        "",
-        cleaned,
-    )
+    if cleaned.startswith("(") and cleaned.endswith(")"):
+        cleaned = "-" + cleaned[1:-1]
+    cleaned = re.sub(r"[$,\s]", "", cleaned)
     try:
-        return Decimal(
-            cleaned
-        ).quantize(
-            Decimal("0.01"),
-            rounding=ROUND_HALF_UP,
-        )
-    except (
-        InvalidOperation,
-        ValueError,
-    ) as exc:
-        raise ValueError(
-            "Invalid currency amount: "
-            f"{value!r}"
-        ) from exc
+        return Decimal(cleaned).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    except (InvalidOperation, ValueError) as exc:
+        raise ValueError(f"Invalid currency amount: {value!r}") from exc
 # ============================================================
 # Text Cleanup
 # ============================================================
 def clean_text_series(series):
-    return series.map(
-        lambda value: (
-            None
-            if pd.isna(value)
-            else str(value).strip()
-        )
-    ).astype("string")
+    return series.map(lambda value: None if pd.isna(value) else str(value).strip()).astype("string")
 # ============================================================
 # Identifier Cleanup
 # ============================================================
@@ -379,34 +220,21 @@ def clean_identifier_series(series):
     Keep identifiers as strings and remove Excel's trailing .0
     when applicable.
     """
-    cleaned = clean_text_series(
-        series
-    )
-    cleaned = cleaned.str.replace(
-        r"\.0$",
-        "",
-        regex=True,
-    )
-    return cleaned
+    cleaned = clean_text_series(series)
+    return cleaned.str.replace(r"\.0$", "", regex=True)
 # ============================================================
 # Validate Cincinnati Public Source Path
 # ============================================================
 def validate_source_path(key):
-    normalized_key = (
-        key.strip("/").lower()
-    )
+    normalized_key = key.strip("/").lower()
     valid_prefixes = [
         "data_from_clients/cincinnati_public/",
         "data-from-clients/cincinnati_public/",
     ]
-    if not any(
-        normalized_key.startswith(prefix)
-        for prefix in valid_prefixes
-    ):
+    if not any(normalized_key.startswith(prefix) for prefix in valid_prefixes):
         raise ValueError(
             "Unexpected Cincinnati Public source path: "
-            f"{key}. "
-            f"Expected one of: {valid_prefixes}"
+            f"{key}. Expected one of: {valid_prefixes}"
         )
 # ============================================================
 # Determine Report Type
@@ -442,45 +270,62 @@ def get_payroll_schema():
     return pa.schema(fields + [pa.field("source_sheet", pa.string()),
                               pa.field("source_row", pa.int64()),
                               pa.field("fiscal_year", pa.string())])
-def payroll_record(values, sheet_name, row_number, fiscal_year):
-    from datetime import datetime, date, time
+
+
+def coerce_payroll_timestamp(value):
+    from datetime import date, datetime, time
     from openpyxl.utils.datetime import from_excel
+
+    if value in (None, ""):
+        return None
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, date):
+        return datetime.combine(value, time())
+    if isinstance(value, (int, float)):
+        return from_excel(value)
+    return pd.to_datetime(value, errors="raise").to_pydatetime()
+
+
+def payroll_record(values, sheet_name, row_number, fiscal_year):
     result = {}
     for col, value in zip(PAYROLL_COLUMNS, values):
         if col in {"debit_amt", "credit_amt"}:
             value = coerce_currency_decimal(value)
         elif col == "check_dt":
-            if value in (None, ""):
-                value = None
-            elif isinstance(value, datetime):
-                pass
-            elif isinstance(value, date):
-                value = datetime.combine(value, time())
-            elif isinstance(value, (int, float)):
-                value = from_excel(value)
-            else:
-                value = datetime.strptime(str(value).strip(), "%m/%d/%Y")
+            value = coerce_payroll_timestamp(value)
         elif value is not None:
             # Keep original text, including leading zeros and description spacing.
             value = str(value)
         result[col] = value
     result.update(source_sheet=sheet_name, source_row=row_number, fiscal_year=fiscal_year)
     return result
+
+
 def convert_payroll_s3_object(bucket, key, s3):
     """Stream all worksheets into one Parquet file without combining giant frames."""
     import tempfile
     from pathlib import Path
     from openpyxl import load_workbook
+
     if PAYROLL_BATCH_ROWS < 1:
         raise ValueError("PAYROLL_BATCH_ROWS must be positive")
+
     match = PAYROLL_FILENAME_PATTERN.fullmatch(PurePosixPath(key).name)
     if match is None:
         raise ValueError(f"Unrecognized payroll filename: {key}")
+
     year = match.group("year")
     fiscal_year = "20" + year if len(year) == 2 else year
     schema = get_payroll_schema()
-    dest_key = f"{PAYROLL_DEST_PREFIX}/{PurePosixPath(key).stem}.parquet"
     counts = {}
+
+    head = s3.head_object(Bucket=bucket, Key=key)
+    version = head.get("VersionId") or head.get("ETag", "").strip('"')
+    version_hash = re.sub(r"[^0-9a-fA-F]", "", version)[:20] if version else "noversion"
+    payroll_dest_prefix = f"{PAYROLL_DEST_PREFIX}/{version_hash}"
+    dest_key = f"{payroll_dest_prefix}/{PurePosixPath(key).stem}.parquet"
+
     with tempfile.TemporaryDirectory(prefix="cincinnati-payroll-") as directory:
         source_path = str(Path(directory) / "source.xlsx")
         output_path = str(Path(directory) / "payroll.parquet")
