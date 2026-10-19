@@ -1,0 +1,92 @@
+Description: Existing Ohio school import Lambda functions
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  CincinnatiImport:
+    Properties:
+      FunctionName: cincinnati_public_import
+      Runtime: python3.14
+      Handler: lambda_function.lambda_handler
+      Role: arn:aws:iam::058264520806:role/service-role/cincinnati_public_import-role-bdrm9od3
+      MemorySize: 10240
+      Timeout: 900
+      Architectures:
+      - x86_64
+      EphemeralStorage:
+        Size: 512
+      Layers:
+      - arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python314:11
+      LoggingConfig:
+        LogGroup: /aws/lambda/cincinnati_public_import
+        LogFormat: Text
+      CodeUri: s3://ohio-schools-sam-artifacts-058264520806-20261015105507/repository-updates/07e4cae850913ebf43dd27d2627436ed
+      Tracing: PassThrough
+    DeletionPolicy: Retain
+    Type: AWS::Serverless::Function
+    UpdateReplacePolicy: Retain
+  DaytonImport:
+    Properties:
+      FunctionName: dayton_public_schools_import
+      Runtime: python3.14
+      Handler: lambda_function.lambda_handler
+      Role: arn:aws:iam::058264520806:role/service-role/dayton_public_schools_import-role-ji14ylqz
+      MemorySize: 1028
+      Timeout: 900
+      Architectures:
+      - x86_64
+      EphemeralStorage:
+        Size: 512
+      Layers:
+      - arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python314:11
+      LoggingConfig:
+        LogGroup: /aws/lambda/dayton_public_schools_import
+        LogFormat: Text
+      CodeUri: s3://ohio-schools-sam-artifacts-058264520806-20261015105507/repository-updates/50553a47bf279be6f69c8824700e69e5
+      Tracing: PassThrough
+    DeletionPolicy: Retain
+    Type: AWS::Serverless::Function
+    UpdateReplacePolicy: Retain
+  ToledoImport:
+    Properties:
+      FunctionName: toledo_public_schools_import
+      Runtime: python3.14
+      Handler: lambda_function.lambda_handler
+      Role: arn:aws:iam::058264520806:role/service-role/toledo_public_schools_import-role-n1apu8d5
+      MemorySize: 1028
+      Timeout: 900
+      Architectures:
+      - x86_64
+      EphemeralStorage:
+        Size: 512
+      Layers:
+      - arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python314:11
+      LoggingConfig:
+        LogGroup: /aws/lambda/toledo_public_schools_import
+        LogFormat: Text
+      CodeUri: s3://ohio-schools-sam-artifacts-058264520806-20261015105507/repository-updates/afc2e6a3054a7d876bc31fe1ecb29d0b
+      Tracing: PassThrough
+    DeletionPolicy: Retain
+    Type: AWS::Serverless::Function
+    UpdateReplacePolicy: Retain
+  AkronImport:
+    Properties:
+      FunctionName: akron_public_import
+      Runtime: python3.14
+      Handler: lambda_function.lambda_handler
+      Role: arn:aws:iam::058264520806:role/service-role/akron_public_import-role-fz8lp0cf
+      MemorySize: 1028
+      Timeout: 900
+      Architectures:
+      - x86_64
+      EphemeralStorage:
+        Size: 512
+      Layers:
+      - arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python314:11
+      LoggingConfig:
+        LogGroup: /aws/lambda/akron_public_import
+        LogFormat: Text
+      CodeUri: s3://ohio-schools-sam-artifacts-058264520806-20261015105507/repository-updates/cbbfc1a87483d31f66842d97ced42bd0
+      Tracing: PassThrough
+    DeletionPolicy: Retain
+    Type: AWS::Serverless::Function
+    UpdateReplacePolicy: Retain
+Transform: AWS::Serverless-2016-10-31

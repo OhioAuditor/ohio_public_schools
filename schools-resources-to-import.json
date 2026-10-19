@@ -1,0 +1,30 @@
+[
+    {
+        "ResourceType":  "AWS::Lambda::Function",
+        "LogicalResourceId":  "CincinnatiImport",
+        "ResourceIdentifier":  {
+                                   "FunctionName":  "cincinnati_public_import"
+                               }
+    },
+    {
+        "ResourceType":  "AWS::Lambda::Function",
+        "LogicalResourceId":  "DaytonImport",
+        "ResourceIdentifier":  {
+                                   "FunctionName":  "dayton_public_schools_import"
+                               }
+    },
+    {
+        "ResourceType":  "AWS::Lambda::Function",
+        "LogicalResourceId":  "ToledoImport",
+        "ResourceIdentifier":  {
+                                   "FunctionName":  "toledo_public_schools_import"
+                               }
+    },
+    {
+        "ResourceType":  "AWS::Lambda::Function",
+        "LogicalResourceId":  "AkronImport",
+        "ResourceIdentifier":  {
+                                   "FunctionName":  "akron_public_import"
+                               }
+    }
+]

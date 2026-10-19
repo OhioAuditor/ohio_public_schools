@@ -1,0 +1,165 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Ohio public school import Lambdas
+
+Parameters:
+  RawBucket:
+    Type: String
+    Default: schools-raw
+  DestBucket:
+    Type: String
+    Default: schools-transformed
+  PandasLayerArn:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python314:11
+
+Resources:
+  AkronImport:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: akron_public_import
+      CodeUri: sam-src/AkronImport/
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.14
+      MemorySize: 1028
+      Timeout: 900
+      Architectures:
+        - x86_64
+      EphemeralStorage:
+        Size: 512
+      Layers:
+        - !Ref PandasLayerArn
+      Environment:
+        Variables:
+          RAW_BUCKET: !Ref RawBucket
+          DEST_BUCKET: !Ref DestBucket
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref RawBucket
+        - S3WritePolicy:
+            BucketName: !Ref DestBucket
+
+  CincinnatiImport:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: cincinnati_public_import
+      CodeUri: sam-src/CincinnatiImport/
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.14
+      MemorySize: 10240
+      Timeout: 900
+      Architectures:
+        - x86_64
+      EphemeralStorage:
+        Size: 512
+      Layers:
+        - !Ref PandasLayerArn
+      Environment:
+        Variables:
+          RAW_BUCKET: !Ref RawBucket
+          DEST_BUCKET: !Ref DestBucket
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref RawBucket
+        - S3WritePolicy:
+            BucketName: !Ref DestBucket
+
+  DaytonImport:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: dayton_public_schools_import
+      CodeUri: sam-src/DaytonImport/
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.14
+      MemorySize: 1028
+      Timeout: 900
+      Architectures:
+        - x86_64
+      EphemeralStorage:
+        Size: 512
+      Layers:
+        - !Ref PandasLayerArn
+      Environment:
+        Variables:
+          RAW_BUCKET: !Ref RawBucket
+          DEST_BUCKET: !Ref DestBucket
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref RawBucket
+        - S3WritePolicy:
+            BucketName: !Ref DestBucket
+
+  ToledoImport:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: toledo_public_schools_import
+      CodeUri: sam-src/ToledoImport/
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.14
+      MemorySize: 1028
+      Timeout: 900
+      Architectures:
+        - x86_64
+      EphemeralStorage:
+        Size: 512
+      Layers:
+        - !Ref PandasLayerArn
+      Environment:
+        Variables:
+          RAW_BUCKET: !Ref RawBucket
+          DEST_BUCKET: !Ref DestBucket
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref RawBucket
+        - S3WritePolicy:
+            BucketName: !Ref DestBucket
+
+  AkronImportPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt AkronImport.Arn
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub arn:aws:s3:::${RawBucket}
+      SourceAccount: !Ref AWS::AccountId
+
+  CincinnatiImportPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt CincinnatiImport.Arn
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub arn:aws:s3:::${RawBucket}
+      SourceAccount: !Ref AWS::AccountId
+
+  DaytonImportPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt DaytonImport.Arn
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub arn:aws:s3:::${RawBucket}
+      SourceAccount: !Ref AWS::AccountId
+
+  ToledoImportPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt ToledoImport.Arn
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub arn:aws:s3:::${RawBucket}
+      SourceAccount: !Ref AWS::AccountId
+
+Outputs:
+  AkronImportArn:
+    Description: Akron import Lambda ARN
+    Value: !GetAtt AkronImport.Arn
+  CincinnatiImportArn:
+    Description: Cincinnati import Lambda ARN
+    Value: !GetAtt CincinnatiImport.Arn
+  DaytonImportArn:
+    Description: Dayton import Lambda ARN
+    Value: !GetAtt DaytonImport.Arn
+  ToledoImportArn:
+    Description: Toledo import Lambda ARN
+    Value: !GetAtt ToledoImport.Arn

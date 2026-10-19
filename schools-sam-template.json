@@ -1,0 +1,119 @@
+{
+    "Description":  "Existing Ohio school import Lambda functions",
+    "AWSTemplateFormatVersion":  "2010-09-09",
+    "Resources":  {
+                      "CincinnatiImport":  {
+                                               "Properties":  {
+                                                                  "FunctionName":  "cincinnati_public_import",
+                                                                  "Runtime":  "python3.14",
+                                                                  "Handler":  "lambda_function.lambda_handler",
+                                                                  "Role":  "arn:aws:iam::058264520806:role/service-role/cincinnati_public_import-role-bdrm9od3",
+                                                                  "MemorySize":  10240,
+                                                                  "Timeout":  900,
+                                                                  "Architectures":  [
+                                                                                        "x86_64"
+                                                                                    ],
+                                                                  "EphemeralStorage":  {
+                                                                                           "Size":  512
+                                                                                       },
+                                                                  "Layers":  [
+                                                                                 "arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python314:11"
+                                                                             ],
+                                                                  "LoggingConfig":  {
+                                                                                        "LogGroup":  "/aws/lambda/cincinnati_public_import",
+                                                                                        "LogFormat":  "Text"
+                                                                                    },
+                                                                  "CodeUri":  "sam-src/CincinnatiImport/",
+                                                                  "Tracing":  "PassThrough"
+                                                              },
+                                               "DeletionPolicy":  "Retain",
+                                               "Type":  "AWS::Serverless::Function",
+                                               "UpdateReplacePolicy":  "Retain"
+                                           },
+                      "DaytonImport":  {
+                                           "Properties":  {
+                                                              "FunctionName":  "dayton_public_schools_import",
+                                                              "Runtime":  "python3.14",
+                                                              "Handler":  "lambda_function.lambda_handler",
+                                                              "Role":  "arn:aws:iam::058264520806:role/service-role/dayton_public_schools_import-role-ji14ylqz",
+                                                              "MemorySize":  1028,
+                                                              "Timeout":  900,
+                                                              "Architectures":  [
+                                                                                    "x86_64"
+                                                                                ],
+                                                              "EphemeralStorage":  {
+                                                                                       "Size":  512
+                                                                                   },
+                                                              "Layers":  [
+                                                                             "arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python314:11"
+                                                                         ],
+                                                              "LoggingConfig":  {
+                                                                                    "LogGroup":  "/aws/lambda/dayton_public_schools_import",
+                                                                                    "LogFormat":  "Text"
+                                                                                },
+                                                              "CodeUri":  "sam-src/DaytonImport/",
+                                                              "Tracing":  "PassThrough"
+                                                          },
+                                           "DeletionPolicy":  "Retain",
+                                           "Type":  "AWS::Serverless::Function",
+                                           "UpdateReplacePolicy":  "Retain"
+                                       },
+                      "ToledoImport":  {
+                                           "Properties":  {
+                                                              "FunctionName":  "toledo_public_schools_import",
+                                                              "Runtime":  "python3.14",
+                                                              "Handler":  "lambda_function.lambda_handler",
+                                                              "Role":  "arn:aws:iam::058264520806:role/service-role/toledo_public_schools_import-role-n1apu8d5",
+                                                              "MemorySize":  1028,
+                                                              "Timeout":  900,
+                                                              "Architectures":  [
+                                                                                    "x86_64"
+                                                                                ],
+                                                              "EphemeralStorage":  {
+                                                                                       "Size":  512
+                                                                                   },
+                                                              "Layers":  [
+                                                                             "arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python314:11"
+                                                                         ],
+                                                              "LoggingConfig":  {
+                                                                                    "LogGroup":  "/aws/lambda/toledo_public_schools_import",
+                                                                                    "LogFormat":  "Text"
+                                                                                },
+                                                              "CodeUri":  "sam-src/ToledoImport/",
+                                                              "Tracing":  "PassThrough"
+                                                          },
+                                           "DeletionPolicy":  "Retain",
+                                           "Type":  "AWS::Serverless::Function",
+                                           "UpdateReplacePolicy":  "Retain"
+                                       },
+                      "AkronImport":  {
+                                          "Properties":  {
+                                                             "FunctionName":  "akron_public_import",
+                                                             "Runtime":  "python3.14",
+                                                             "Handler":  "lambda_function.lambda_handler",
+                                                             "Role":  "arn:aws:iam::058264520806:role/service-role/akron_public_import-role-fz8lp0cf",
+                                                             "MemorySize":  1028,
+                                                             "Timeout":  900,
+                                                             "Architectures":  [
+                                                                                   "x86_64"
+                                                                               ],
+                                                             "EphemeralStorage":  {
+                                                                                      "Size":  512
+                                                                                  },
+                                                             "Layers":  [
+                                                                            "arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python314:11"
+                                                                        ],
+                                                             "LoggingConfig":  {
+                                                                                   "LogGroup":  "/aws/lambda/akron_public_import",
+                                                                                   "LogFormat":  "Text"
+                                                                               },
+                                                             "CodeUri":  "sam-src/AkronImport/",
+                                                             "Tracing":  "PassThrough"
+                                                         },
+                                          "DeletionPolicy":  "Retain",
+                                          "Type":  "AWS::Serverless::Function",
+                                          "UpdateReplacePolicy":  "Retain"
+                                      }
+                  },
+    "Transform":  "AWS::Serverless-2016-10-31"
+}

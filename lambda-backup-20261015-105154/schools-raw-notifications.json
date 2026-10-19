@@ -1,0 +1,228 @@
+﻿{
+    "LambdaFunctionConfigurations": [
+        {
+            "Id": "school-processing-data-from-clients-redesign-209688036",
+            "LambdaFunctionArn": "arn:aws:lambda:us-east-2:058264520806:function:school-import-redesign",
+            "Events": [
+                "s3:ObjectCreated:*"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": "data-from-clients/redesign/"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "Id": "601cb24f-cb46-4619-9ad1-16c9cd65e6d0",
+            "LambdaFunctionArn": "arn:aws:lambda:us-east-2:058264520806:function:school-import-efp",
+            "Events": [
+                "s3:ObjectCreated:*"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": "data-from-clients/eFP/"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "Id": "incometax-income-tax-xlsx",
+            "LambdaFunctionArn": "arn:aws:lambda:us-east-2:058264520806:function:school-import-income-tax",
+            "Events": [
+                "s3:ObjectCreated:*"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": "other-data/income-tax/"
+                        },
+                        {
+                            "Name": "Suffix",
+                            "Value": ".xlsx"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "Id": "incometax-income-tax-csv",
+            "LambdaFunctionArn": "arn:aws:lambda:us-east-2:058264520806:function:school-import-income-tax",
+            "Events": [
+                "s3:ObjectCreated:*"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": "other-data/income-tax/"
+                        },
+                        {
+                            "Name": "Suffix",
+                            "Value": ".csv"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "Id": "intergov-dtl-trigger",
+            "LambdaFunctionArn": "arn:aws:lambda:us-east-2:058264520806:function:school-import-dtl",
+            "Events": [
+                "s3:ObjectCreated:*"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": "other-data/dtl/"
+                        },
+                        {
+                            "Name": "Suffix",
+                            "Value": ".csv"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "Id": "intergov-foundation-trigger",
+            "LambdaFunctionArn": "arn:aws:lambda:us-east-2:058264520806:function:school-import-foundation",
+            "Events": [
+                "s3:ObjectCreated:*"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": "other-data/foundations/"
+                        },
+                        {
+                            "Name": "Suffix",
+                            "Value": ".xlsx"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "Id": "560ccd2e-06bd-429e-aa69-7400ef859cc5",
+            "LambdaFunctionArn": "arn:aws:lambda:us-east-2:058264520806:function:school-opcs-to-parquet-prod",
+            "Events": [
+                "s3:ObjectCreated:*"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": "other-data/opcs_data/"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "Id": "0ede4df3-7a65-4230-abaa-44177e6da350",
+            "LambdaFunctionArn": "arn:aws:lambda:us-east-2:058264520806:function:dayton_public_schools_import",
+            "Events": [
+                "s3:ObjectCreated:*"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": "data-from-clients/dayton_public/"
+                        },
+                        {
+                            "Name": "Suffix",
+                            "Value": ".xlsx"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "Id": "603a2e70-634a-472a-a227-a70b297fa6e2",
+            "LambdaFunctionArn": "arn:aws:lambda:us-east-2:058264520806:function:toledo_public_schools_import",
+            "Events": [
+                "s3:ObjectCreated:*"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": "data-from-clients/toledo_public/"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "Id": "c295a7c7-2687-4eb6-bf15-393b6e1a6d48",
+            "LambdaFunctionArn": "arn:aws:lambda:us-east-2:058264520806:function:akron_public_import",
+            "Events": [
+                "s3:ObjectCreated:*"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": "data-from-clients/akron_public/"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "Id": "b48fef3a-ef91-43c6-83b2-41832bddc26a",
+            "LambdaFunctionArn": "arn:aws:lambda:us-east-2:058264520806:function:columbus_public_import",
+            "Events": [
+                "s3:ObjectCreated:*"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": "data-from-clients/columbus_public/"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "Id": "4c164d1f-6077-4822-8970-d49ba577d545",
+            "LambdaFunctionArn": "arn:aws:lambda:us-east-2:058264520806:function:cincinnati_public_import",
+            "Events": [
+                "s3:ObjectCreated:*"
+            ],
+            "Filter": {
+                "Key": {
+                    "FilterRules": [
+                        {
+                            "Name": "Prefix",
+                            "Value": "data-from-clients/cincinnati_public/"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
